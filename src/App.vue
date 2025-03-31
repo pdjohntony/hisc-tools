@@ -6,6 +6,7 @@ import { HouseIcon } from "lucide-vue-next";
 import appState from "@/stores/appState";
 import SettingsMenu from "@/components/SettingsMenu.vue";
 
+import Toaster from "@/components/ui/toast/Toaster.vue";
 import { Button } from "@/components/ui/button";
 
 onMounted(async () => {
@@ -17,6 +18,7 @@ onMounted(async () => {
 </script>
 
 <template>
+  <Toaster />
   <main class="p-6">
     <!-- Navbar -->
     <nav class="flex justify-between items-center mb-6">
