@@ -18,6 +18,15 @@ import { Menu } from "lucide-vue-next";
 import { useColorMode } from "@vueuse/core";
 
 const mode = useColorMode();
+
+// Emits
+const emit = defineEmits<{
+  (e: "check-for-updates"): void;
+}>();
+
+function checkForUpdates() {
+  emit("check-for-updates");
+}
 </script>
 
 <template>
@@ -50,6 +59,9 @@ const mode = useColorMode();
       </DropdownMenuSub>
       <DropdownMenuSeparator />
       <DropdownMenuLabel>Version {{ appState.version }}</DropdownMenuLabel>
+      <DropdownMenuItem @click="checkForUpdates">
+        Check for updates
+      </DropdownMenuItem>
     </DropdownMenuContent>
   </DropdownMenu>
 </template>

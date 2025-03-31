@@ -1,24 +1,29 @@
 <script setup lang="ts">
-import { onMounted } from "vue";
-import { getVersion } from "@tauri-apps/api/app";
-import { HouseIcon } from "lucide-vue-next";
+import { ref, onMounted } from 'vue'
+import { getVersion } from '@tauri-apps/api/app'
 
-import appState from "@/stores/appState";
-import SettingsMenu from "@/components/SettingsMenu.vue";
+import appState from '@/stores/appState'
+import SettingsMenu from '@/components/SettingsMenu.vue'
+import UpdaterDrawer from '@/components/UpdaterDrawer.vue'
 
-import Toaster from "@/components/ui/toast/Toaster.vue";
-import { Button } from "@/components/ui/button";
+import { HouseIcon } from 'lucide-vue-next'
+import Toaster from '@/components/ui/toast/Toaster.vue'
+import { Button } from '@/components/ui/button'
+
+// States
+const openUpdaterDrawer = ref(true)
 
 onMounted(async () => {
-  console.log("App mounted");
+  console.log('App mounted')
 
-  appState.value.version = await getVersion();
-  console.log("App version:", appState.value.version);
-});
+  appState.value.version = await getVersion()
+  console.log('App version:', appState.value.version)
+})
 </script>
 
 <template>
   <Toaster />
+  <UpdaterDrawer v-model:open="openUpdaterDrawer" />
   <main class="p-6">
     <!-- Navbar -->
     <nav class="flex justify-between items-center mb-6">
@@ -32,16 +37,12 @@ onMounted(async () => {
           </div>
         </RouterLink>
         <div class="flex gap-2 text-primary/50">
-          <RouterLink
-            :to="{ name: 'tool-lateclockins' }"
-            activeClass="text-primary"
-            as-child
-          >
+          <RouterLink :to="{ name: 'tool-lateclockins' }" activeClass="text-primary" as-child>
             <Button variant="ghost" size="xs">Late Clock Ins</Button>
           </RouterLink>
         </div>
       </div>
-      <SettingsMenu />
+      <SettingsMenu @check-for-updates="openUpdaterDrawer = true" />
     </nav>
 
     <RouterView />
@@ -49,6 +50,6 @@ onMounted(async () => {
 </template>
 
 <style>
-@import "./assets/main.css";
+@import './assets/main.css';
 </style>
 <style scoped></style>
