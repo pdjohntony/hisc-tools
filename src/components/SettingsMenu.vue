@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import appState from "@/stores/appState";
+
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -46,6 +48,8 @@ const mode = useColorMode();
           </DropdownMenuSubContent>
         </DropdownMenuPortal>
       </DropdownMenuSub>
+      <DropdownMenuSeparator />
+      <DropdownMenuLabel>Version {{ appState.version }}</DropdownMenuLabel>
     </DropdownMenuContent>
   </DropdownMenu>
 </template>
