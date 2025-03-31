@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "hisc-late-clock-ins",
+  "productName": "hisc-tools",
   "version": "0.1.0",
-  "identifier": "com.hisc-late-clock-ins.app",
+  "identifier": "com.hisc-tools.app",
   "build": {
     "beforeDevCommand": "pnpm dev",
     "devUrl": "http://localhost:1420",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "hisc-late-clock-ins",
+        "title": "HISC Tools",
         "width": 800,
         "height": 600
       }

@@ -2,5 +2,5 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 fn main() {
-    hisc_late_clock_ins_lib::run()
+    hisc_tools_lib::run()
 }
