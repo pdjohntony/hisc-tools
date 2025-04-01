@@ -58,7 +58,19 @@ jobs:
         if: matrix.platform == 'windows-2025'
         run: |
           winget install -e --id Microsoft.Azure.TrustedSigningClientTools --silent --accept-package-agreements --accept-source-agreements
-          cargo install trusted-signing-cli
+          $outputPath = "$env:USERPROFILE\AppData\Local\trusted-signing-cli.exe"
+          Invoke-WebRequest -Uri "https://github.com/Levminer/trusted-signing-cli/releases/download/0.5.0/trusted-signing-cli.exe" -OutFile $outputPath
+          Write-Host "Binary downloaded to $outputPath"
+          $trustedSigningDir = "$env:USERPROFILE\AppData\Local"
+          Write-Host "Adding $trustedSigningDir to PATH..."
+          # Append the directory to the GitHub Actions PATH
+          Add-Content -Path $env:GITHUB_PATH -Value $trustedSigningDir
+          Write-Host "PATH updated. Current PATH: $env:PATH"
+
+      - name: test trusted-signing-cli
+        run: |
+          Write-Host "Current PATH: $env:PATH"
+          trusted-signing-cli.exe --version
 
       - uses: tauri-apps/tauri-action@v0
         env:
