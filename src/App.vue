@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { getVersion } from '@tauri-apps/api/app'
 
-import appState from '@/stores/appState'
+// import appState from '@/stores/appState'
 import SettingsMenu from '@/components/SettingsMenu.vue'
 import UpdaterDrawer from '@/components/UpdaterDrawer.vue'
 
@@ -15,9 +14,6 @@ const openUpdaterDrawer = ref(false)
 
 onMounted(async () => {
   console.log('App mounted')
-
-  appState.value.version = await getVersion()
-  console.log('App version:', appState.value.version)
 })
 </script>
 

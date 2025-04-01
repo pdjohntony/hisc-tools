@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 
+import { getVersion } from '@tauri-apps/api/app'
 import { check } from '@tauri-apps/plugin-updater'
 import type { Update } from '@tauri-apps/plugin-updater'
 import { relaunch } from '@tauri-apps/plugin-process'
@@ -52,6 +53,8 @@ const updateStatus = ref({
 })
 
 onMounted(async () => {
+  appState.value.version = await getVersion()
+  console.log('App version:', appState.value.version)
   checkForNewVersion()
 })
 
