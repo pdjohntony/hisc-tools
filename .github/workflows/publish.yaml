@@ -28,36 +28,31 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # - name: Install pnpm
-      #   uses: pnpm/action-setup@v4
-      #   with:
-      #     version: 10
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
 
-      # - name: setup node
-      #   uses: actions/setup-node@v4
-      #   with:
-      #     node-version: lts/*
-      #     cache: 'pnpm'
+      - name: setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: 'pnpm'
 
-      # - name: install Rust stable
-      #   uses: dtolnay/rust-toolchain@stable
-      #   with:
-      #     # Those targets are only used on macos runners so it's in an `if` to slightly speed up windows and linux builds.
-      #     targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+      - name: install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          # Those targets are only used on macos runners so it's in an `if` to slightly speed up windows and linux builds.
+          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
-      # - name: install dependencies (ubuntu only)
-      #   if: matrix.platform == 'ubuntu-22.04'
-      #   run: |
-      #     sudo apt-get update
-      #     sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+      - name: install dependencies (ubuntu only)
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
 
-      # - name: install frontend dependencies
-      #   run: pnpm install
-
-      - name: test
-        env:
-          SIGNTOOL_PATH: C:\Program Files (x86)\Windows Kits\10\bin\10.0.22621.0\x64\signtool.exe
-        run: $env:SIGNTOOL_PATH
+      - name: install frontend dependencies
+        run: pnpm install
 
       - name: install code signing dependencies
         if: matrix.platform == 'windows-2025'
@@ -68,11 +63,6 @@ jobs:
           Invoke-WebRequest -Uri "https://github.com/Levminer/trusted-signing-cli/releases/download/0.5.0/trusted-signing-cli.exe" -OutFile $outputPath
           $trustedSigningDir = "$env:USERPROFILE\AppData\Local"
           Add-Content -Path $env:GITHUB_PATH -Value $trustedSigningDir
-
-      - name: test trusted-signing-cli
-        run: |
-          Write-Host "Current PATH: $env:PATH"
-          trusted-signing-cli.exe --version
 
       - uses: tauri-apps/tauri-action@v0
         env:
