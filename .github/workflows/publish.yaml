@@ -56,7 +56,7 @@ jobs:
 
       - name: install code signing dependencies
         if: matrix.platform == 'windows-2025'
-        run: winget install -e --id Microsoft.Azure.TrustedSigningClientTools
+        run: winget install -e --id Microsoft.Azure.TrustedSigningClientTools --silent --accept-package-agreements --accept-source-agreements
 
       - uses: tauri-apps/tauri-action@v0
         env:
