@@ -11,7 +11,7 @@ import Toaster from '@/components/ui/toast/Toaster.vue'
 import { Button } from '@/components/ui/button'
 
 // States
-const openUpdaterDrawer = ref(true)
+const openUpdaterDrawer = ref(false)
 
 onMounted(async () => {
   console.log('App mounted')
