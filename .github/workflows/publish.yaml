@@ -21,7 +21,7 @@ jobs:
           #     args: '--target x86_64-apple-darwin'
           #   - platform: 'ubuntu-22.04' # for Tauri v1 you could replace this with ubuntu-20.04.
           #     args: ''
-          - platform: 'windows-latest'
+          - platform: 'windows-2025'
             args: '--bundles msi --verbose'
 
     runs-on: ${{ matrix.platform }}
@@ -55,13 +55,8 @@ jobs:
         run: pnpm install
 
       - name: install code signing dependencies
-        if: matrix.platform == 'windows-latest'
-        run: |
-          $progressPreference = 'silentlyContinue'
-          Install-PackageProvider -Name NuGet -Force | Out-Null
-          Install-Module -Name Microsoft.WinGet.Client -Force -Repository PSGallery | Out-Null
-          Repair-WinGetPackageManager
-          winget install -e --id Microsoft.Azure.TrustedSigningClientTools
+        if: matrix.platform == 'windows-2025'
+        run: winget install -e --id Microsoft.Azure.TrustedSigningClientTools
 
       - uses: tauri-apps/tauri-action@v0
         env:
