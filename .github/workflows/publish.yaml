@@ -60,7 +60,6 @@ jobs:
           winget install -e --id Microsoft.Azure.TrustedSigningClientTools --silent --accept-package-agreements --accept-source-agreements
           & "$env:LOCALAPPDATA\Microsoft\MicrosoftTrustedSigningClientTools\winsdksetup.exe" /features OptionId.SigningTools /q /norestart
           ls "C:\Program Files (x86)\Windows Kits\10\bin"
-          ls "C:\Program Files (x86)\Windows Kits\10\bin\10.0.22000.0\x64"
           ls "C:\Program Files (x86)\Windows Kits\10\bin\10.0.22621.0\x64"
           .\signtool.exe --help
           $outputPath = "$env:LOCALAPPDATA\trusted-signing-cli.exe"
