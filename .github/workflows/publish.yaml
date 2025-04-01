@@ -54,6 +54,11 @@ jobs:
       # - name: install frontend dependencies
       #   run: pnpm install
 
+      - name: test
+        env:
+          SIGNTOOL_PATH: C:\Program Files (x86)\Windows Kits\10\bin\10.0.22621.0\x64\signtool.exe
+        run: $env:SIGNTOOL_PATH
+
       - name: install code signing dependencies
         if: matrix.platform == 'windows-2025'
         run: |
@@ -80,6 +85,7 @@ jobs:
           AZURE_TENANT_ID: ${{ env.AZURE_TENANT_ID }}
           AZURE_CLIENT_ID: ${{ env.AZURE_CLIENT_ID }}
           AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          SIGNTOOL_PATH: C:\Program Files (x86)\Windows Kits\10\bin\10.0.22621.0\x64\signtool.exe
         with:
           tagName: v__VERSION__
           releaseName: 'v__VERSION__'
