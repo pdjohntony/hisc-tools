@@ -56,7 +56,12 @@ jobs:
 
       - name: install code signing dependencies
         if: matrix.platform == 'windows-latest'
-        run: winget install Microsoft.Azure.TrustedSigningClientTools
+        run: |
+          $progressPreference = 'silentlyContinue'
+          Install-PackageProvider -Name NuGet -Force | Out-Null
+          Install-Module -Name Microsoft.WinGet.Client -Force -Repository PSGallery | Out-Null
+          Repair-WinGetPackageManager
+          winget install -e --id Microsoft.Azure.TrustedSigningClientTools
 
       - uses: tauri-apps/tauri-action@v0
         env:
