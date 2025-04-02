@@ -1,16 +1,70 @@
-# Tauri + Vue + TypeScript
+# HISC Tools
 
-This template should help get you started developing with Vue 3 and TypeScript in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+Various tools for HISC.
 
-## Recommended IDE Setup
+- [Recommended IDE Setup](#recommended-ide-setup)
+- [Type Support For `.vue` Imports in TS](#type-support-for-vue-imports-in-ts)
 
-- [VS Code](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
+## Development
 
-## Type Support For `.vue` Imports in TS
+### Windows Requirements
 
-Since TypeScript cannot handle type information for `.vue` imports, they are shimmed to be a generic Vue component type by default. In most cases this is fine if you don't really care about component prop types outside of templates. However, if you wish to get actual prop types in `.vue` imports (for example to get props validation when using manual `h(...)` calls), you can enable Volar's Take Over mode by following these steps:
+- [Microsoft C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/) (Desktop development with C++ option)
+- [WebView2](https://developer.microsoft.com/en-us/microsoft-edge/webview2/) (Comes installed on Windows 10 (from version 1803 onward))
+- [Rust](https://www.rust-lang.org/learn/get-started)
+- [Node.js](https://nodejs.org/en)
+- [pnpm](https://pnpm.io/installation)
 
-1. Run `Extensions: Show Built-in Extensions` from VS Code's command palette, look for `TypeScript and JavaScript Language Features`, then right click and select `Disable (Workspace)`. By default, Take Over mode will enable itself if the default TypeScript extension is disabled.
-2. Reload the VS Code window by running `Developer: Reload Window` from the command palette.
+### Extra Requirements for Windows Code Signing
+- [Trusted Signing Account](https://learn.microsoft.com/en-us/azure/trusted-signing/quickstart?tabs=registerrp-portal,account-portal,certificateprofile-portal,deleteresources-portal) and permissions configured
+- [Trusted Signing Client Tools](https://learn.microsoft.com/en-us/azure/trusted-signing/how-to-signing-integrations)
+  - [.NET](https://dotnet.microsoft.com/en-us/download/dotnet/8.0) (.NET 6 or later recommended)
+  - [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli-windows?tabs=azure-cli#install-or-update)
+  - [SignTool](https://learn.microsoft.com/en-us/dotnet/framework/tools/signtool-exe) (Windows 11 SDK 10.0.22000.0 or later recommended)
 
-You can learn more about Take Over mode [here](https://github.com/johnsoncodehk/volar/discussions/471).
+### Environment Variables
+
+The following environment variables are required to to sign app updates:
+- TAURI_SIGNING_PRIVATE_KEY
+- TAURI_SIGNING_PRIVATE_KEY_PASSWORD
+
+The following environment variables are required for Windows Code Signing with Azure Trusted Signing:
+- AZURE_TENANT_ID
+- AZURE_CLIENT_ID
+- AZURE_CLIENT_SECRET
+
+### Install Dependencies
+
+```bash
+pnpm install
+```
+
+### Run Dev
+
+```bash
+pnpm tauri dev
+```
+
+### Build
+
+```bash
+pnpm tauri build --bundles msi --verbose
+```
+
+Use this command if using .env file:
+
+```bash
+pnpm dlx dotenv-cli -e .env -- pnpm tauri build --bundles msi --verbose
+```
+
+### Prep for Release
+
+```bash
+pnpm preprelease
+```
+
+## Automatic Updates
+
+This app is configured to check for automatic updates on startup at the following URL:
+
+https://github.com/pdjohntony/hisc-tools/releases/latest/download/latest.json
