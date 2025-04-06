@@ -14,8 +14,8 @@
       {
         "title": "HISC Tools",
         "center": true,
-        "width": 800,
-        "height": 600,
+        "width": 1440,
+        "height": 810,
         "dragDropEnabled": false,
         "devtools": true
       }
