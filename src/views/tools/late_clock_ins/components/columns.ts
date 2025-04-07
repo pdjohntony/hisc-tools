@@ -26,6 +26,9 @@ const columns: ColumnDef<ClockInEntry>[] = [
     header: ({ column }) => createSortableHeader('Actual Clock In', column),
     cell: ({ row }) => {
       const dateObj = row.getValue('actual_clock_in') as Date
+      if (!dateObj) {
+        return ''
+      }
       const formattedDate = dateObj.toLocaleDateString('en-US', {
         month: '2-digit',
         day: '2-digit',
@@ -44,6 +47,9 @@ const columns: ColumnDef<ClockInEntry>[] = [
     header: ({ column }) => createSortableHeader('Scheduled Clock In', column),
     cell: ({ row }) => {
       const dateObj = row.getValue('scheduled_clock_in') as Date
+      if (!dateObj) {
+        return ''
+      }
       const formattedDate = dateObj.toLocaleDateString('en-US', {
         month: '2-digit',
         day: '2-digit',

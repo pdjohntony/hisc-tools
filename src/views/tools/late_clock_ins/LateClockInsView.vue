@@ -123,8 +123,15 @@ function calculateLateStatus(data: Record<string, any>[]): ClockInData {
   const lateThresholdMinutes = 7
 
   const updatedData: ClockInData = data.map((row): ClockInEntry => {
-    const actualClockIn = new Date(row['Actual Clock In'])
-    const scheduledClockIn = new Date(row['Scheduled Clock In'])
+    let actualClockIn = null
+    let scheduledClockIn = null
+
+    if (row['Actual Clock In']) {
+      actualClockIn = new Date(row['Actual Clock In'])
+    }
+    if (row['Scheduled Clock In']) {
+      scheduledClockIn = new Date(row['Scheduled Clock In'])
+    }
     let late_min = 0
     let late = false
 
@@ -170,7 +177,8 @@ function autoFitColumns(worksheet: WorkSheet): void {
 
     // Loop on rows
     for (let row = 1; row <= rows; row++) {
-      const cellLength = worksheet[`${col}${row}`].v.length + 1
+      const cell = worksheet[`${col}${row}`]
+      const cellLength = cell && cell.v ? cell.v.length + 1 : 0
       if (cellLength > maxCellLength) maxCellLength = cellLength
     }
 
