@@ -24,6 +24,8 @@ function resetState() {
 
 async function onFileUploaded(files: FileList) {
   try {
+    resetState()
+
     file.value = files[0]
 
     const { worksheet } = await readFileAsWorkbook(file.value)
