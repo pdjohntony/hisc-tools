@@ -21,8 +21,8 @@ jobs:
           #     args: '--target x86_64-apple-darwin'
           #   - platform: 'ubuntu-22.04' # for Tauri v1 you could replace this with ubuntu-20.04.
           #     args: ''
-          - platform: 'windows-latest'
-            args: '--bundles msi --verbose'
+          - platform: 'windows-2025'
+            args: '--bundles msi --verbose--bundles msi --verbose'
 
     runs-on: ${{ matrix.platform }}
     steps:
@@ -42,7 +42,6 @@ jobs:
       - name: install Rust stable
         uses: dtolnay/rust-toolchain@stable
         with:
-          # Those targets are only used on macos runners so it's in an `if` to slightly speed up windows and linux builds.
           targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
       - name: install dependencies (ubuntu only)
@@ -55,20 +54,27 @@ jobs:
         run: pnpm install
 
       - name: install code signing dependencies
-        if: matrix.platform == 'windows-latest'
-        run: winget install Microsoft.Azure.TrustedSigningClientTools
+        if: matrix.platform == 'windows-2025'
+        run: |
+          winget install -e --id Microsoft.Azure.TrustedSigningClientTools --silent --accept-package-agreements --accept-source-agreements
+          & "$env:LOCALAPPDATA\Microsoft\MicrosoftTrustedSigningClientTools\winsdksetup.exe" /features OptionId.SigningTools /q /norestart
+          $outputPath = "$env:LOCALAPPDATA\trusted-signing-cli.exe"
+          Invoke-WebRequest -Uri "https://github.com/Levminer/trusted-signing-cli/releases/download/0.5.0/trusted-signing-cli.exe" -OutFile $outputPath
+          $trustedSigningDir = "$env:USERPROFILE\AppData\Local"
+          Add-Content -Path $env:GITHUB_PATH -Value $trustedSigningDir
 
       - uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
-          AZURE_TRUST_SIGN_ACCOUNT: ${{ env.AZURE_TRUST_SIGN_ACCOUNT }}
-          AZURE_TRUST_SIGN_ENDPOINT: ${{ env.AZURE_TRUST_SIGN_ENDPOINT }}
-          AZURE_TRUST_SIGN_PROFILE: ${{ env.AZURE_TRUST_SIGN_PROFILE }}
-          AZURE_TENANT_ID: ${{ env.AZURE_TENANT_ID }}
-          AZURE_CLIENT_ID: ${{ env.AZURE_CLIENT_ID }}
+          AZURE_TRUST_SIGN_ACCOUNT: ${{ secrets.AZURE_TRUST_SIGN_ACCOUNT }}
+          AZURE_TRUST_SIGN_ENDPOINT: ${{ secrets.AZURE_TRUST_SIGN_ENDPOINT }}
+          AZURE_TRUST_SIGN_PROFILE: ${{ secrets.AZURE_TRUST_SIGN_PROFILE }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          SIGNTOOL_PATH: C:\Program Files (x86)\Windows Kits\10\bin\10.0.22621.0\x64\signtool.exe
         with:
           tagName: v__VERSION__
           releaseName: 'v__VERSION__'
