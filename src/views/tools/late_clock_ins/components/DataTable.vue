@@ -2,7 +2,7 @@
 import type { ColumnDef, ColumnFiltersState, SortingState } from '@tanstack/vue-table'
 import { ref } from 'vue'
 
-import { SaveIcon, Undo2Icon, ClockAlertIcon, ClockIcon } from 'lucide-vue-next'
+import { SaveIcon, Undo2Icon, ClockAlertIcon, ClockIcon, Loader2Icon } from 'lucide-vue-next'
 import {
   Table,
   TableBody,
@@ -26,7 +26,10 @@ import { valueUpdater } from '@/lib/utils'
 const props = defineProps<{
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
+  savingFile: boolean
 }>()
+
+let isFiltering = ref(false)
 
 // Emits
 const emit = defineEmits<{
@@ -61,19 +64,28 @@ const table = useVueTable({
 
 table.getColumn('late')?.setFilterValue(true)
 table.getColumn('caregiver_name')?.toggleSorting(false)
+
+function onShowAllClockIns(filterValue: boolean | undefined) {
+  isFiltering.value = true
+  table.getColumn('late')?.setFilterValue(filterValue)
+  isFiltering.value = false
+}
 </script>
 
 <template>
   <div class="flex items-center py-4 gap-2">
-    <Button variant="secondary" @click="emit('save')"><SaveIcon />Save Report</Button>
+    <Button variant="secondary" @click="emit('save')" :disabled="savingFile"
+      ><Loader2Icon v-if="savingFile" class="animate-spin" /><SaveIcon v-else />Save Report</Button
+    >
     <Button variant="secondary" @click="emit('restart')"><Undo2Icon />Restart</Button>
     <Button
       v-if="table.getColumn('late')?.getIsFiltered()"
-      @click="table.getColumn('late')?.setFilterValue(undefined)"
+      @click="onShowAllClockIns(undefined)"
       variant="secondary"
-      ><ClockIcon />Show all Clock Ins</Button
+      ><Loader2Icon v-if="isFiltering" class="animate-spin" /><ClockIcon v-else />Show all Clock
+      Ins</Button
     >
-    <Button v-else @click="table.getColumn('late')?.setFilterValue(true)" variant="destructive"
+    <Button v-else @click="onShowAllClockIns(true)" variant="destructive"
       ><ClockAlertIcon />Show only late Clock Ins</Button
     >
   </div>

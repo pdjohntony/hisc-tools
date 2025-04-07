@@ -5,7 +5,7 @@ import type { WorkSheet, WorkBook, ColInfo } from 'xlsx'
 import { ref } from 'vue'
 import { read, utils, writeFile } from 'xlsx'
 
-import { AlertCircleIcon } from 'lucide-vue-next'
+import { AlertCircleIcon, Loader2Icon } from 'lucide-vue-next'
 import notify from '@/lib/notify.ts'
 import FileUpload from '@/components/FileUpload.vue'
 import columns from '@/views/tools/late_clock_ins/components/columns.ts'
@@ -15,6 +15,8 @@ import DataTable from '@/views/tools/late_clock_ins/components/DataTable.vue'
 let errorMessage = ref<string | null>(null)
 let file = ref<File | null>(null)
 let clockInData = ref<ClockInData | undefined>(undefined)
+let processingFile = ref(false)
+let savingFile = ref(false)
 
 function resetState() {
   console.log('Resetting states')
@@ -26,6 +28,8 @@ function resetState() {
 async function onFileUploaded(files: FileList) {
   try {
     resetState()
+
+    processingFile.value = true
 
     file.value = files[0]
 
@@ -42,6 +46,8 @@ async function onFileUploaded(files: FileList) {
       console.error('Unexpected error:', error)
       errorMessage.value = 'An unexpected error occurred'
     }
+  } finally {
+    processingFile.value = false
   }
 }
 
@@ -199,6 +205,9 @@ function dataToSheet(data: Record<string, any>[]): { worksheet: WorkSheet; heade
 
 function saveResultsToFile(data: Record<string, any>[], ogFilename: string | undefined): void {
   try {
+    console.log('Preparing to save results to file...')
+    savingFile.value = true
+
     const { worksheet, headers } = dataToSheet(data)
 
     // Enable autofilter
@@ -232,6 +241,7 @@ function saveResultsToFile(data: Record<string, any>[], ogFilename: string | und
     const finalFilename = `${baseFilename} late ${datetime}${extension}`
 
     // Save sheet to a file
+    console.log('Saving file...')
     writeFile(new_workbook, finalFilename)
     console.log(`Results saved to file: ${finalFilename}`)
     notify('Saved report', undefined, 'success', 'app')
@@ -243,6 +253,8 @@ function saveResultsToFile(data: Record<string, any>[], ogFilename: string | und
       console.error('Unexpected error:', error)
       notify('Error saving report', 'An unexpected error occurred', 'destructive', 'app')
     }
+  } finally {
+    savingFile.value = false
   }
 }
 
@@ -272,17 +284,21 @@ function updateSheetRange(ws: WorkSheet): void {
   <div v-if="errorMessage" class="flex gap-2 mb-4 bg-destructive p-2 rounded-md items-center">
     <AlertCircleIcon class="size-4" />Error: {{ errorMessage }}
   </div>
-  <div v-if="!clockInData">
+  <div v-if="!clockInData && !processingFile">
     <FileUpload
       v-if="!clockInData"
       :allowedFileTypes="['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet']"
       @files-uploaded="onFileUploaded"
     />
   </div>
-  <div v-else>
+  <div v-else-if="processingFile" class="flex items-center justify-center">
+    <Loader2Icon class="animate-spin size-14" />
+  </div>
+  <div v-else-if="clockInData">
     <DataTable
       :columns="columns"
       :data="clockInData"
+      :savingFile="savingFile"
       @save="saveResultsToFile(clockInData, file?.name)"
       @restart="resetState"
     />
