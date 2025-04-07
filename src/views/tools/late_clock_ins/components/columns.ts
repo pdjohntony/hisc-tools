@@ -43,7 +43,7 @@ const columns: ColumnDef<ClockInEntry>[] = [
     accessorKey: 'scheduled_clock_in',
     header: ({ column }) => createSortableHeader('Scheduled Clock In', column),
     cell: ({ row }) => {
-      const dateObj = row.getValue('actual_clock_in') as Date
+      const dateObj = row.getValue('scheduled_clock_in') as Date
       const formattedDate = dateObj.toLocaleDateString('en-US', {
         month: '2-digit',
         day: '2-digit',
