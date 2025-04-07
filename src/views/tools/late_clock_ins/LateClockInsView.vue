@@ -6,6 +6,7 @@ import { ref } from 'vue'
 import { read, utils, writeFile } from 'xlsx'
 
 import { AlertCircleIcon } from 'lucide-vue-next'
+import notify from '@/lib/notify.ts'
 import FileUpload from '@/components/FileUpload.vue'
 import columns from '@/views/tools/late_clock_ins/components/columns.ts'
 import DataTable from '@/views/tools/late_clock_ins/components/DataTable.vue'
@@ -197,41 +198,52 @@ function dataToSheet(data: Record<string, any>[]): { worksheet: WorkSheet; heade
 }
 
 function saveResultsToFile(data: Record<string, any>[], ogFilename: string | undefined): void {
-  const { worksheet, headers } = dataToSheet(data)
+  try {
+    const { worksheet, headers } = dataToSheet(data)
 
-  // Enable autofilter
-  worksheet['!autofilter'] = {
-    ref: worksheet['!ref']
-  } as any
+    // Enable autofilter
+    worksheet['!autofilter'] = {
+      ref: worksheet['!ref']
+    } as any
 
-  // Change column widths by getting the data key character lengths
-  autoFitColumns(worksheet)
-  if (!worksheet['!cols']) {
-    worksheet['!cols'] = []
+    // Change column widths by getting the data key character lengths
+    autoFitColumns(worksheet)
+    if (!worksheet['!cols']) {
+      worksheet['!cols'] = []
+    }
+    worksheet['!cols'][headers.findIndex((header) => header === 'Actual Clock In')] = { wch: 19 }
+    worksheet['!cols'][headers.findIndex((header) => header === 'Scheduled Clock In')] = {
+      wch: 19
+    }
+    console.log('Autofit columns applied')
+
+    // Create a new workbook and append the worksheet
+    const new_workbook = utils.book_new()
+    utils.book_append_sheet(new_workbook, worksheet)
+
+    // Get filename and extension separately
+    if (!ogFilename) {
+      ogFilename = 'clock ins.xlsx'
+    }
+    const fnParts = ogFilename.match(/^(.+)(\.[^.]+)$/)
+    const baseFilename = fnParts ? fnParts[1] : ogFilename
+    const extension = fnParts ? fnParts[2] : '.xlsx'
+    const datetime = new Date().toISOString().replace(/[:.-]/g, '')
+    const finalFilename = `${baseFilename} late ${datetime}${extension}`
+
+    // Save sheet to a file
+    writeFile(new_workbook, finalFilename)
+    console.log(`Results saved to file: ${finalFilename}`)
+    notify('Saved report', undefined, 'success', 'app')
+  } catch (error) {
+    if (error instanceof Error) {
+      console.error('Error:', error.message)
+      notify('Error saving report', error.message, 'destructive', 'app')
+    } else {
+      console.error('Unexpected error:', error)
+      notify('Error saving report', 'An unexpected error occurred', 'destructive', 'app')
+    }
   }
-  worksheet['!cols'][headers.findIndex((header) => header === 'Actual Clock In')] = { wch: 19 }
-  worksheet['!cols'][headers.findIndex((header) => header === 'Scheduled Clock In')] = {
-    wch: 19
-  }
-  console.log('Autofit columns applied')
-
-  // Create a new workbook and append the worksheet
-  const new_workbook = utils.book_new()
-  utils.book_append_sheet(new_workbook, worksheet)
-
-  // Get filename and extension separately
-  if (!ogFilename) {
-    ogFilename = 'clock ins.xlsx'
-  }
-  const fnParts = ogFilename.match(/^(.+)(\.[^.]+)$/)
-  const baseFilename = fnParts ? fnParts[1] : ogFilename
-  const extension = fnParts ? fnParts[2] : '.xlsx'
-  const datetime = new Date().toISOString().replace(/[:.-]/g, '')
-  const finalFilename = `${baseFilename} late ${datetime}${extension}`
-
-  // Save sheet to a file
-  writeFile(new_workbook, finalFilename)
-  console.log(`Results saved to file: ${finalFilename}`)
 }
 
 function updateSheetRange(ws: WorkSheet): void {
