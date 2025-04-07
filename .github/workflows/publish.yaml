@@ -75,6 +75,7 @@ jobs:
           AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
           SIGNTOOL_PATH: C:\Program Files (x86)\Windows Kits\10\bin\10.0.22621.0\x64\signtool.exe
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
         with:
           tagName: v__VERSION__
           releaseName: 'v__VERSION__'

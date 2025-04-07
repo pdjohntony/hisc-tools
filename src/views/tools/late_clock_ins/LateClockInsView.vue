@@ -5,28 +5,41 @@ import type { WorkSheet, WorkBook, ColInfo } from 'xlsx'
 import { ref } from 'vue'
 import { read, utils, writeFile } from 'xlsx'
 
+import { AlertCircleIcon } from 'lucide-vue-next'
 import FileUpload from '@/components/FileUpload.vue'
 import columns from '@/views/tools/late_clock_ins/components/columns.ts'
 import DataTable from '@/views/tools/late_clock_ins/components/DataTable.vue'
 
 // States
+let errorMessage = ref<string | null>(null)
 let file = ref<File | null>(null)
 let clockInData = ref<ClockInData | undefined>(undefined)
 
 function resetState() {
   console.log('Resetting states')
+  errorMessage.value = null
   file.value = null
   clockInData.value = undefined
 }
 
 async function onFileUploaded(files: FileList) {
-  file.value = files[0]
+  try {
+    file.value = files[0]
 
-  const { worksheet } = await readFileAsWorkbook(file.value)
+    const { worksheet } = await readFileAsWorkbook(file.value)
 
-  let { data } = getSheetData(worksheet)
+    let { data } = getSheetData(worksheet)
 
-  clockInData.value = calculateLateStatus(data)
+    clockInData.value = calculateLateStatus(data)
+  } catch (error) {
+    if (error instanceof Error) {
+      console.error('Error:', error.message)
+      errorMessage.value = error.message
+    } else {
+      console.error('Unexpected error:', error)
+      errorMessage.value = 'An unexpected error occurred'
+    }
+  }
 }
 
 async function readFileAsWorkbook(
@@ -36,6 +49,7 @@ async function readFileAsWorkbook(
 
   const fileData = await file.arrayBuffer()
   const workbook = read(fileData, { cellDates: true })
+  // console.log('Workbook:', workbook)
 
   if (!workbook || !workbook.Sheets || Object.keys(workbook.Sheets).length === 0) {
     throw new Error('No sheets found in the workbook')
@@ -44,6 +58,8 @@ async function readFileAsWorkbook(
   console.log('Worksheet found:', workbook.SheetNames[0])
 
   const worksheet = workbook.Sheets[workbook.SheetNames[0]]
+  updateSheetRange(worksheet)
+  // console.log('Worksheet:', worksheet)
 
   return {
     workbook,
@@ -215,6 +231,22 @@ function saveResultsToFile(data: Record<string, any>[], ogFilename: string | und
   writeFile(new_workbook, finalFilename)
   console.log(`Results saved to file: ${finalFilename}`)
 }
+
+function updateSheetRange(ws: WorkSheet): void {
+  var range = { s: { r: Infinity, c: Infinity }, e: { r: 0, c: 0 } }
+  Object.keys(ws)
+    .filter(function (x) {
+      return x.charAt(0) != '!'
+    })
+    .map(utils.decode_cell)
+    .forEach(function (x) {
+      range.s.c = Math.min(range.s.c, x.c)
+      range.s.r = Math.min(range.s.r, x.r)
+      range.e.c = Math.max(range.e.c, x.c)
+      range.e.r = Math.max(range.e.r, x.r)
+    })
+  ws['!ref'] = utils.encode_range(range)
+}
 </script>
 
 <template>
@@ -222,6 +254,9 @@ function saveResultsToFile(data: Record<string, any>[], ogFilename: string | und
     Analyzes a clock in report and returns clock ins that are 7+ minutes later. The report must
     contain the <strong>Actual Clock In</strong>, <strong>Scheduled Clock In</strong> columns, all
     others are optional.
+  </div>
+  <div v-if="errorMessage" class="flex gap-2 mb-4 bg-destructive p-2 rounded-md items-center">
+    <AlertCircleIcon class="size-4" />Error: {{ errorMessage }}
   </div>
   <div v-if="!clockInData">
     <FileUpload
