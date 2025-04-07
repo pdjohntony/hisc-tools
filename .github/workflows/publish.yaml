@@ -22,7 +22,7 @@ jobs:
           #   - platform: 'ubuntu-22.04' # for Tauri v1 you could replace this with ubuntu-20.04.
           #     args: ''
           - platform: 'windows-2025'
-            args: '--bundles msi --verbose--bundles msi --verbose'
+            args: '--bundles msi --verbose'
 
     runs-on: ${{ matrix.platform }}
     steps:
