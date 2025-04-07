@@ -5,28 +5,41 @@ import type { WorkSheet, WorkBook, ColInfo } from 'xlsx'
 import { ref } from 'vue'
 import { read, utils, writeFile } from 'xlsx'
 
+import { AlertCircleIcon } from 'lucide-vue-next'
 import FileUpload from '@/components/FileUpload.vue'
 import columns from '@/views/tools/late_clock_ins/components/columns.ts'
 import DataTable from '@/views/tools/late_clock_ins/components/DataTable.vue'
 
 // States
+let errorMessage = ref<string | null>(null)
 let file = ref<File | null>(null)
 let clockInData = ref<ClockInData | undefined>(undefined)
 
 function resetState() {
   console.log('Resetting states')
+  errorMessage.value = null
   file.value = null
   clockInData.value = undefined
 }
 
 async function onFileUploaded(files: FileList) {
-  file.value = files[0]
+  try {
+    file.value = files[0]
 
-  const { worksheet } = await readFileAsWorkbook(file.value)
+    const { worksheet } = await readFileAsWorkbook(file.value)
 
-  let { data } = getSheetData(worksheet)
+    let { data } = getSheetData(worksheet)
 
-  clockInData.value = calculateLateStatus(data)
+    clockInData.value = calculateLateStatus(data)
+  } catch (error) {
+    if (error instanceof Error) {
+      console.error('Error:', error.message)
+      errorMessage.value = error.message
+    } else {
+      console.error('Unexpected error:', error)
+      errorMessage.value = 'An unexpected error occurred'
+    }
+  }
 }
 
 async function readFileAsWorkbook(
@@ -222,6 +235,9 @@ function saveResultsToFile(data: Record<string, any>[], ogFilename: string | und
     Analyzes a clock in report and returns clock ins that are 7+ minutes later. The report must
     contain the <strong>Actual Clock In</strong>, <strong>Scheduled Clock In</strong> columns, all
     others are optional.
+  </div>
+  <div v-if="errorMessage" class="flex gap-2 mb-4 bg-destructive p-2 rounded-md items-center">
+    <AlertCircleIcon class="size-4" />Error: {{ errorMessage }}
   </div>
   <div v-if="!clockInData">
     <FileUpload
