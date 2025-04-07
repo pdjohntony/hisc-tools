@@ -1,22 +1,23 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "hisc-tools",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "identifier": "com.hisc-tools.app",
   "build": {
     "beforeDevCommand": "pnpm dev",
     "devUrl": "http://localhost:1420",
     "beforeBuildCommand": "pnpm build",
-    "frontendDist": "../dist"
+    "frontendDist": "../dist/frontend"
   },
   "app": {
     "windows": [
       {
         "title": "HISC Tools",
         "center": true,
-        "width": 800,
-        "height": 600,
-        "dragDropEnabled": false
+        "width": 1440,
+        "height": 810,
+        "dragDropEnabled": false,
+        "devtools": true
       }
     ],
     "security": {
@@ -33,7 +34,10 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
-    "createUpdaterArtifacts": true
+    "createUpdaterArtifacts": true,
+    "windows": {
+      "signCommand": "trusted-signing-cli -e https://eus.codesigning.azure.net -a pj-trusted-signing -c Phillip-Johntony -d HISCTools %1"
+    }
   },
   "plugins": {
     "updater": {
