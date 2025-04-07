@@ -5,7 +5,8 @@ import type { WorkSheet, WorkBook, ColInfo } from 'xlsx'
 import { ref } from 'vue'
 import { read, utils, writeFile } from 'xlsx'
 
-import { AlertCircleIcon } from 'lucide-vue-next'
+import { AlertCircleIcon, Loader2Icon } from 'lucide-vue-next'
+import notify from '@/lib/notify.ts'
 import FileUpload from '@/components/FileUpload.vue'
 import columns from '@/views/tools/late_clock_ins/components/columns.ts'
 import DataTable from '@/views/tools/late_clock_ins/components/DataTable.vue'
@@ -14,6 +15,8 @@ import DataTable from '@/views/tools/late_clock_ins/components/DataTable.vue'
 let errorMessage = ref<string | null>(null)
 let file = ref<File | null>(null)
 let clockInData = ref<ClockInData | undefined>(undefined)
+let processingFile = ref(false)
+let savingFile = ref(false)
 
 function resetState() {
   console.log('Resetting states')
@@ -24,6 +27,10 @@ function resetState() {
 
 async function onFileUploaded(files: FileList) {
   try {
+    resetState()
+
+    processingFile.value = true
+
     file.value = files[0]
 
     const { worksheet } = await readFileAsWorkbook(file.value)
@@ -39,6 +46,8 @@ async function onFileUploaded(files: FileList) {
       console.error('Unexpected error:', error)
       errorMessage.value = 'An unexpected error occurred'
     }
+  } finally {
+    processingFile.value = false
   }
 }
 
@@ -114,8 +123,15 @@ function calculateLateStatus(data: Record<string, any>[]): ClockInData {
   const lateThresholdMinutes = 7
 
   const updatedData: ClockInData = data.map((row): ClockInEntry => {
-    const actualClockIn = new Date(row['Actual Clock In'])
-    const scheduledClockIn = new Date(row['Scheduled Clock In'])
+    let actualClockIn = null
+    let scheduledClockIn = null
+
+    if (row['Actual Clock In']) {
+      actualClockIn = new Date(row['Actual Clock In'])
+    }
+    if (row['Scheduled Clock In']) {
+      scheduledClockIn = new Date(row['Scheduled Clock In'])
+    }
     let late_min = 0
     let late = false
 
@@ -161,7 +177,8 @@ function autoFitColumns(worksheet: WorkSheet): void {
 
     // Loop on rows
     for (let row = 1; row <= rows; row++) {
-      const cellLength = worksheet[`${col}${row}`].v.length + 1
+      const cell = worksheet[`${col}${row}`]
+      const cellLength = cell && cell.v ? cell.v.length + 1 : 0
       if (cellLength > maxCellLength) maxCellLength = cellLength
     }
 
@@ -195,41 +212,58 @@ function dataToSheet(data: Record<string, any>[]): { worksheet: WorkSheet; heade
 }
 
 function saveResultsToFile(data: Record<string, any>[], ogFilename: string | undefined): void {
-  const { worksheet, headers } = dataToSheet(data)
+  try {
+    console.log('Preparing to save results to file...')
+    savingFile.value = true
 
-  // Enable autofilter
-  worksheet['!autofilter'] = {
-    ref: worksheet['!ref']
-  } as any
+    const { worksheet, headers } = dataToSheet(data)
 
-  // Change column widths by getting the data key character lengths
-  autoFitColumns(worksheet)
-  if (!worksheet['!cols']) {
-    worksheet['!cols'] = []
+    // Enable autofilter
+    worksheet['!autofilter'] = {
+      ref: worksheet['!ref']
+    } as any
+
+    // Change column widths by getting the data key character lengths
+    autoFitColumns(worksheet)
+    if (!worksheet['!cols']) {
+      worksheet['!cols'] = []
+    }
+    worksheet['!cols'][headers.findIndex((header) => header === 'Actual Clock In')] = { wch: 19 }
+    worksheet['!cols'][headers.findIndex((header) => header === 'Scheduled Clock In')] = {
+      wch: 19
+    }
+    console.log('Autofit columns applied')
+
+    // Create a new workbook and append the worksheet
+    const new_workbook = utils.book_new()
+    utils.book_append_sheet(new_workbook, worksheet)
+
+    // Get filename and extension separately
+    if (!ogFilename) {
+      ogFilename = 'clock ins.xlsx'
+    }
+    const fnParts = ogFilename.match(/^(.+)(\.[^.]+)$/)
+    const baseFilename = fnParts ? fnParts[1] : ogFilename
+    const extension = fnParts ? fnParts[2] : '.xlsx'
+    const datetime = new Date().toISOString().replace(/[:.-]/g, '')
+    const finalFilename = `${baseFilename} late ${datetime}${extension}`
+
+    // Save sheet to a file
+    console.log('Saving file...')
+    writeFile(new_workbook, finalFilename)
+    console.log(`Results saved to file: ${finalFilename}`)
+    notify('Saved report', undefined, 'success', 'app')
+  } catch (error) {
+    if (error instanceof Error) {
+      console.error('Error:', error.message)
+      notify('Error saving report', error.message, 'destructive', 'app')
+    } else {
+      console.error('Unexpected error:', error)
+      notify('Error saving report', 'An unexpected error occurred', 'destructive', 'app')
+    }
+  } finally {
+    savingFile.value = false
   }
-  worksheet['!cols'][headers.findIndex((header) => header === 'Actual Clock In')] = { wch: 19 }
-  worksheet['!cols'][headers.findIndex((header) => header === 'Scheduled Clock In')] = {
-    wch: 19
-  }
-  console.log('Autofit columns applied')
-
-  // Create a new workbook and append the worksheet
-  const new_workbook = utils.book_new()
-  utils.book_append_sheet(new_workbook, worksheet)
-
-  // Get filename and extension separately
-  if (!ogFilename) {
-    ogFilename = 'clock ins.xlsx'
-  }
-  const fnParts = ogFilename.match(/^(.+)(\.[^.]+)$/)
-  const baseFilename = fnParts ? fnParts[1] : ogFilename
-  const extension = fnParts ? fnParts[2] : '.xlsx'
-  const datetime = new Date().toISOString().replace(/[:.-]/g, '')
-  const finalFilename = `${baseFilename} late ${datetime}${extension}`
-
-  // Save sheet to a file
-  writeFile(new_workbook, finalFilename)
-  console.log(`Results saved to file: ${finalFilename}`)
 }
 
 function updateSheetRange(ws: WorkSheet): void {
@@ -258,17 +292,21 @@ function updateSheetRange(ws: WorkSheet): void {
   <div v-if="errorMessage" class="flex gap-2 mb-4 bg-destructive p-2 rounded-md items-center">
     <AlertCircleIcon class="size-4" />Error: {{ errorMessage }}
   </div>
-  <div v-if="!clockInData">
+  <div v-if="!clockInData && !processingFile">
     <FileUpload
       v-if="!clockInData"
       :allowedFileTypes="['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet']"
       @files-uploaded="onFileUploaded"
     />
   </div>
-  <div v-else>
+  <div v-else-if="processingFile" class="flex items-center justify-center">
+    <Loader2Icon class="animate-spin size-14" />
+  </div>
+  <div v-else-if="clockInData">
     <DataTable
       :columns="columns"
       :data="clockInData"
+      :savingFile="savingFile"
       @save="saveResultsToFile(clockInData, file?.name)"
       @restart="resetState"
     />

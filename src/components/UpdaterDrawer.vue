@@ -134,8 +134,10 @@ async function downloadAndInstallUpdate() {
       <div class="mx-auto w-full max-w-xl">
         <template v-if="updateStatus.isInstalling">
           <DrawerHeader>
-            <DrawerTitle>Installing update...</DrawerTitle>
-            <DrawerDescription>Version {{ updateStatus.version }}</DrawerDescription>
+            <DrawerTitle class="text-center">Installing update...</DrawerTitle>
+            <DrawerDescription class="text-center"
+              >Version <strong>{{ updateStatus.version }}</strong></DrawerDescription
+            >
           </DrawerHeader>
           <div class="flex px-4 items-center justify-center space-x-2">
             <LoaderCircleIcon class="w-12 h-12 animate-spin" />
@@ -143,8 +145,10 @@ async function downloadAndInstallUpdate() {
         </template>
         <template v-else-if="updateStatus.isDownloading">
           <DrawerHeader>
-            <DrawerTitle>Downloading update...</DrawerTitle>
-            <DrawerDescription>Version {{ updateStatus.version }}</DrawerDescription>
+            <DrawerTitle class="text-center">Downloading update...</DrawerTitle>
+            <DrawerDescription class="text-center"
+              >Version <strong>{{ updateStatus.version }}</strong></DrawerDescription
+            >
           </DrawerHeader>
           <div class="flex flex-col px-4 items-center justify-center">
             <span class="mb-2 font-semibold">{{ updateStatus.progress }}%</span>
@@ -153,8 +157,22 @@ async function downloadAndInstallUpdate() {
         </template>
         <template v-else-if="updateStatus.available">
           <DrawerHeader>
-            <DrawerTitle>App update available</DrawerTitle>
-            <DrawerDescription>Version {{ updateStatus.version }}</DrawerDescription>
+            <DrawerTitle class="text-center">App update available</DrawerTitle>
+            <DrawerDescription class="text-center"
+              ><div class="mt-2">
+                Current Version: <strong>{{ appState.version }}</strong>
+              </div>
+              <div>
+                New Version: <strong>{{ updateStatus.version }}</strong
+                ><Button variant="link" class="px-2 text-muted-foreground" as-child>
+                  <a
+                    :href="`https://github.com/pdjohntony/hisc-tools/releases/tag/v${appState.version}`"
+                    target="_blank"
+                    >Release Notes</a
+                  >
+                </Button>
+              </div></DrawerDescription
+            >
           </DrawerHeader>
           <div class="flex flex-col px-4 items-center justify-center gap-4">
             <span
@@ -171,8 +189,17 @@ async function downloadAndInstallUpdate() {
         </template>
         <template v-else>
           <DrawerHeader>
-            <DrawerTitle>App is up to date</DrawerTitle>
-            <DrawerDescription>Current Version {{ appState.version }}</DrawerDescription>
+            <DrawerTitle class="text-center">App is up to date</DrawerTitle>
+            <DrawerDescription class="text-center"
+              >Current Version: <strong>{{ appState.version }}</strong>
+              <Button variant="link" class="px-2 text-muted-foreground" as-child>
+                <a
+                  :href="`https://github.com/pdjohntony/hisc-tools/releases/tag/v${appState.version}`"
+                  target="_blank"
+                  >Release Notes</a
+                >
+              </Button>
+            </DrawerDescription>
           </DrawerHeader>
           <div class="flex px-4 items-center justify-center space-x-2">
             <Button class="w-full" @click="checkForNewVersion" :disabled="updateStatus.checking"
