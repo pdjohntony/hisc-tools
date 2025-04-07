@@ -1,104 +1,105 @@
 <script setup lang="ts">
-import { ref } from "vue";
-import { UploadIcon, AlertCircleIcon } from "lucide-vue-next";
+import { ref } from 'vue'
+import { UploadIcon, AlertCircleIcon } from 'lucide-vue-next'
 
 // Props
 interface Props {
-  allowedFileTypes?: string[];
-  allowMultipleFiles?: boolean;
+  allowedFileTypes?: string[]
+  allowMultipleFiles?: boolean
 }
-const props = defineProps<Props>();
-const allowedFileTypes = props.allowedFileTypes || ["*"];
-const allowMultipleFiles = props.allowMultipleFiles || false;
+const props = defineProps<Props>()
+const allowedFileTypes = props.allowedFileTypes || ['*']
+const allowMultipleFiles = props.allowMultipleFiles || false
 
 // Emits
 const emit = defineEmits<{
-  (e: "files-processed", files: FileList): void;
-}>();
+  (e: 'files-uploaded', files: FileList): void
+}>()
 
 // States
-const fileInput = ref<HTMLInputElement | null>(null);
+const fileInput = ref<HTMLInputElement | null>(null)
 
-let fileDropZoneHover = ref(false);
-let fileDropZoneInvalid = ref(false);
-let hoverInactiveTimeout: number | null = null;
+let fileDropZoneHover = ref(false)
+let fileDropZoneInvalid = ref(false)
+let hoverInactiveTimeout: number | null = null
 
 function triggerFileSelect() {
-  console.log("triggerFileSelect");
-  fileInput.value?.click();
+  console.log('triggerFileSelect')
+  fileInput.value?.click()
 }
 
 function setFileDropZoneActive() {
   // console.log("setFileDropZoneActive");
-  fileDropZoneHover.value = true;
-  fileDropZoneInvalid.value = false;
+  fileDropZoneHover.value = true
+  fileDropZoneInvalid.value = false
 
   if (hoverInactiveTimeout) {
-    clearTimeout(hoverInactiveTimeout);
+    clearTimeout(hoverInactiveTimeout)
   }
 }
 
 function setFileDropZoneInactive() {
   // console.log("setFileDropZoneInactive");
   hoverInactiveTimeout = window.setTimeout(() => {
-    fileDropZoneHover.value = false;
-  }, 50);
+    fileDropZoneHover.value = false
+  }, 50)
 }
 
 function isFileAllowed(file: File): boolean {
   // console.log("isFileAllowed", file);
-  if (allowedFileTypes.includes("*")) {
-    return true;
+  if (allowedFileTypes.includes('*')) {
+    return true
   }
-  return allowedFileTypes.some((type) => file.type === type);
+  return allowedFileTypes.some((type) => file.type === type)
 }
 
 function validateFiles(files: FileList): boolean {
   // console.log("validateFiles", files);
   for (let i = 0; i < files.length; i++) {
     if (!isFileAllowed(files[i])) {
-      console.log("Invalid file type(s)");
-      return false;
+      console.log('Invalid file type(s)')
+      return false
     }
   }
-  console.log("Valid file type(s)");
-  return true;
+  console.log('Valid file type(s)')
+  return true
 }
 
 function onFileDrop(event: DragEvent) {
-  console.log("onFileDrop", event);
-  fileDropZoneHover.value = false;
+  console.log('onFileDrop', event)
+  fileDropZoneHover.value = false
 
-  const files = event.dataTransfer?.files;
-  console.log(files);
+  const files = event.dataTransfer?.files
+  console.log(files)
 
   if (!files || files.length === 0) {
-    return;
+    return
   }
 
   if (validateFiles(files)) {
-    fileDropZoneInvalid.value = false;
-    emit("files-processed", files);
+    fileDropZoneInvalid.value = false
+    console.log('Emitting files-processed event with files:', files)
+    emit('files-uploaded', files)
   } else {
-    fileDropZoneInvalid.value = true;
+    fileDropZoneInvalid.value = true
   }
 }
 
 function onFileSelect(event: Event) {
-  console.log("onFileSelect", event);
-  const target = event.target as HTMLInputElement;
-  const files = target.files;
-  console.log(files);
+  console.log('onFileSelect', event)
+  const target = event.target as HTMLInputElement
+  const files = target.files
+  console.log(files)
 
   if (!files || files.length === 0) {
-    return;
+    return
   }
 
   if (validateFiles(files)) {
-    fileDropZoneInvalid.value = false;
-    emit("files-processed", files);
+    fileDropZoneInvalid.value = false
+    emit('files-uploaded', files)
   } else {
-    fileDropZoneInvalid.value = true;
+    fileDropZoneInvalid.value = true
   }
 }
 </script>
@@ -114,7 +115,7 @@ function onFileSelect(event: Event) {
     @click="triggerFileSelect"
     :class="[
       'p-6 text-center rounded-lg hover:bg-muted/70 transition-colors duration-200 cursor-pointer',
-      fileDropZoneHover ? 'bg-muted/70' : 'bg-muted/50',
+      fileDropZoneHover ? 'bg-muted/70' : 'bg-muted/50'
     ]"
   >
     <input
@@ -133,14 +134,14 @@ function onFileSelect(event: Event) {
       <UploadIcon
         :class="[
           'w-14 h-14 mx-auto my-4 text-neutral-500',
-          fileDropZoneHover ? 'animate-bounce' : '',
+          fileDropZoneHover ? 'animate-bounce' : ''
         ]"
       />
       <p>
         {{
           fileDropZoneHover
-            ? "Drop files here"
-            : "Drag and drop files here, or click to select files"
+            ? 'Drop files here'
+            : 'Drag and drop files here, or click to select files'
         }}
       </p>
     </template>
