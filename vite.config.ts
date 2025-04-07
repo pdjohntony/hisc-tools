@@ -1,29 +1,38 @@
-import { defineConfig } from "vite";
-import vue from "@vitejs/plugin-vue";
-import path from "node:path";
-import autoprefixer from "autoprefixer";
-import tailwind from "tailwindcss";
+import { defineConfig } from 'vite'
+import vue from '@vitejs/plugin-vue'
+import path from 'node:path'
+import autoprefixer from 'autoprefixer'
+import tailwind from 'tailwindcss'
+import { sentryVitePlugin } from '@sentry/vite-plugin'
 
-const host = process.env.TAURI_DEV_HOST;
+const host = process.env.TAURI_DEV_HOST
 
 // https://vitejs.dev/config/
 export default defineConfig(async () => ({
-  plugins: [vue()],
+  plugins: [
+    vue(),
+    sentryVitePlugin({
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+      org: 'pjtlabs',
+      project: 'hisc-tools'
+    })
+  ],
 
   css: {
     postcss: {
-      plugins: [tailwind(), autoprefixer()],
-    },
+      plugins: [tailwind(), autoprefixer()]
+    }
   },
 
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"),
-    },
+      '@': path.resolve(__dirname, './src')
+    }
   },
 
   build: {
-    outDir: path.join(__dirname, "./dist/frontend"),
+    outDir: path.join(__dirname, './dist/frontend'),
+    sourcemap: true // For Sentry
   },
 
   // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
@@ -37,14 +46,14 @@ export default defineConfig(async () => ({
     host: host || false,
     hmr: host
       ? {
-          protocol: "ws",
+          protocol: 'ws',
           host,
-          port: 1421,
+          port: 1421
         }
       : undefined,
     watch: {
       // 3. tell vite to ignore watching `src-tauri`
-      ignored: ["**/src-tauri/**"],
-    },
-  },
-}));
+      ignored: ['**/src-tauri/**']
+    }
+  }
+}))
