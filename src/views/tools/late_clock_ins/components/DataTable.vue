@@ -77,7 +77,7 @@ table.getColumn('caregiver_name')?.toggleSorting(false)
       ><ClockAlertIcon />Show only late Clock Ins</Button
     >
   </div>
-  <div class="border rounded-md">
+  <div class="border rounded-md data-table-container">
     <Table>
       <TableHeader>
         <TableRow v-for="headerGroup in table.getHeaderGroups()" :key="headerGroup.id">
@@ -111,3 +111,9 @@ table.getColumn('caregiver_name')?.toggleSorting(false)
     </Table>
   </div>
 </template>
+<style scoped>
+.data-table-container {
+  max-height: calc(100vh - 212px);
+  overflow-y: auto;
+}
+</style>
