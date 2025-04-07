@@ -49,6 +49,7 @@ async function readFileAsWorkbook(
 
   const fileData = await file.arrayBuffer()
   const workbook = read(fileData, { cellDates: true })
+  // console.log('Workbook:', workbook)
 
   if (!workbook || !workbook.Sheets || Object.keys(workbook.Sheets).length === 0) {
     throw new Error('No sheets found in the workbook')
@@ -57,6 +58,8 @@ async function readFileAsWorkbook(
   console.log('Worksheet found:', workbook.SheetNames[0])
 
   const worksheet = workbook.Sheets[workbook.SheetNames[0]]
+  updateSheetRange(worksheet)
+  // console.log('Worksheet:', worksheet)
 
   return {
     workbook,
@@ -227,6 +230,22 @@ function saveResultsToFile(data: Record<string, any>[], ogFilename: string | und
   // Save sheet to a file
   writeFile(new_workbook, finalFilename)
   console.log(`Results saved to file: ${finalFilename}`)
+}
+
+function updateSheetRange(ws: WorkSheet): void {
+  var range = { s: { r: Infinity, c: Infinity }, e: { r: 0, c: 0 } }
+  Object.keys(ws)
+    .filter(function (x) {
+      return x.charAt(0) != '!'
+    })
+    .map(utils.decode_cell)
+    .forEach(function (x) {
+      range.s.c = Math.min(range.s.c, x.c)
+      range.s.r = Math.min(range.s.r, x.r)
+      range.e.c = Math.max(range.e.c, x.c)
+      range.e.r = Math.max(range.e.r, x.r)
+    })
+  ws['!ref'] = utils.encode_range(range)
 }
 </script>
 
